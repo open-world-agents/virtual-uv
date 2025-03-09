@@ -33,7 +33,7 @@ If equivalent feature is implemented in `uv`, this repo would be useless; I hope
 ## Installation
 
 ```sh
-pip install vuv
+pip install virtual-uv
 ```
 
 ## Usage
