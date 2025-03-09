@@ -4,7 +4,7 @@ A wrapper script for [`uv`](https://github.com/astral-sh/uv) enabling automatic 
 
 ## Motivation
 
-`uv`, by defaults without [`UV_PROJECT_ENVIRONMENT` customization](https://docs.astral.sh/uv/configuration/environment/#uv_project_environment), forcefully creates and activates its own virtual environment, even when you already have one activated. This behavior can be inconvenient, **especially when working in a monorepo setup.**
+`uv`, by defaults without [`UV_PROJECT_ENVIRONMENT` customization](https://docs.astral.sh/uv/configuration/environment/#uv_project_environment), **forcefully creates and activates its own virtual environment, even when you already have one activated.** This behavior can be inconvenient, *especially when working in a monorepo setup.*
 
 In monorepo development, `uv` only supports:
 
@@ -75,12 +75,6 @@ When you run a command with `vuv`:
 - **Python**: 3.7 or higher
 - **uv**: Ensure `uv` is installed and accessible from the command line.
 - **Virtual Environment**: An active virtual environment managed by `conda`, `virtualenv`, or similar tools.
-
-## Related Issues
-
-This tool addresses:
-
-- [`uv` forcefully creates and activates its own virtual environment even when one is already activated](https://github.com/astral-sh/uv/issues/11315)
 
 ## Contributing
 
