@@ -42,7 +42,7 @@ def main():
     else:
         # block `uv` command if no virtual environment is activated
         print("Please activate a virtual environment to run the `vuv` command.")
-        return
+        exit(1)
 
     # Run the `uv` command
     subprocess.run(["uv"] + args.args, env=env)
