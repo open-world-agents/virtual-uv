@@ -13,6 +13,7 @@ Related issue: https://github.com/astral-sh/uv/issues/11315
 import argparse
 import os
 import subprocess
+import sys
 
 
 def main():
@@ -42,11 +43,12 @@ def main():
     else:
         # block `uv` command if no virtual environment is activated
         print("Please activate a virtual environment to run the `vuv` command.")
-        exit(1)
+        return 1
 
     # Run the `uv` command
-    subprocess.run(["uv"] + args.args, env=env)
+    result = subprocess.run(["uv"] + args.args, env=env)
+    return result.returncode
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
