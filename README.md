@@ -1,4 +1,4 @@
-# vuv
+# virtual-uv
 
 A wrapper script for [`uv`](https://github.com/astral-sh/uv) enabling automatic virtual environment detection and configuration.
 
