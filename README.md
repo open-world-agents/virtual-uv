@@ -51,24 +51,40 @@ vuv install
 
 # Run other uv commands
 vuv <uv-command> [arguments]
+
+# For Docker containers or when you need to work with conda base environment
+VUV_ALLOW_BASE=1 vuv add package-name
 ```
 
 ### Note
 
 - **Virtual Environment Required**: `vuv` requires an active virtual environment. If none is detected, to prevent unexpected behavior, it will prompt you to activate one. If you require system-wide install, use pure `uv` instead of `vuv`.
-- **`conda`'s `base` environment is protected**: By defaults, `vuv` prevents users to modify package in `base` environment in `conda`.
+- **`conda`'s `base` environment protection**: `vuv` will ask for user confirmation before modifying packages in the `base` environment in `conda`, as this is generally not recommended. You can bypass this prompt by setting the `VUV_ALLOW_BASE=1` environment variable (useful in Docker containers).
 
 ## How It Works
 
 When you run a command with `vuv`:
 
 1. **Checks for an Active Virtual Environment**:
-   - For **conda**, it checks if `CONDA_DEFAULT_ENV` is set and not equal to `base`.
+   - For **conda**, it checks if `CONDA_DEFAULT_ENV` is set. If it's the `base` environment, it asks for user confirmation before proceeding.
    - For **virtualenv**, it checks if `VIRTUAL_ENV` is set.
 2. **Sets Environment Variables**:
    - Sets `UV_PROJECT_ENVIRONMENT` to point to your current virtual environment, so `uv` uses it instead of creating a new one.
 3. **Runs the `uv` Command**:
    - Passes all arguments to `uv` with the modified environment variables.
+
+## Environment Variables
+
+- **`VUV_ALLOW_BASE`**: Set to `1`, `true`, or `yes` to allow modifications to conda's base environment without confirmation prompts. This is particularly useful in Docker containers where you need to work with the base environment.
+
+  ```sh
+  # Allow base environment modifications
+  export VUV_ALLOW_BASE=1
+  vuv add package-name
+
+  # Or set it for a single command
+  VUV_ALLOW_BASE=1 vuv add package-name
+  ```
 
 ## Requirements
 

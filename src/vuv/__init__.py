@@ -31,7 +31,23 @@ def main():
 
     # Setup environment variables
     env = os.environ.copy()
-    if "CONDA_DEFAULT_ENV" in env and env["CONDA_DEFAULT_ENV"] != "base":
+    if "CONDA_DEFAULT_ENV" in env:
+        if env["CONDA_DEFAULT_ENV"] == "base":
+            # Check if base environment modifications are allowed via environment variable
+            if env.get("VUV_ALLOW_BASE", "").lower() not in ["1", "true", "yes"]:
+                # Ask for user confirmation when base environment is activated
+                print("Warning: You are about to modify the conda base environment.")
+                print("This is generally not recommended as it can affect system-wide Python packages.")
+                print("To skip this prompt, set VUV_ALLOW_BASE=1 environment variable.")
+                try:
+                    response = input("Do you want to continue? (y/N): ").strip().lower()
+                    if response not in ["y", "yes"]:
+                        print("Operation cancelled.")
+                        return 1
+                except (EOFError, KeyboardInterrupt):
+                    print("\nOperation cancelled.")
+                    return 1
+
         # to support `project` feature: https://docs.astral.sh/uv/configuration/environment/#uv_project_environment
         env["UV_PROJECT_ENVIRONMENT"] = env["CONDA_PREFIX"]
         # to support `--active` option: https://github.com/astral-sh/uv/pull/11189
