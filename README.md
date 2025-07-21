@@ -2,6 +2,20 @@
 
 A wrapper script for [`uv`](https://github.com/astral-sh/uv) enabling automatic virtual environment detection and configuration.
 
+## Quick Demo
+
+```sh
+# Activate your conda environment
+conda activate myproject
+
+# Now use vuv instead of uv - it respects your active environment!
+vuv add requests pandas numpy    # Adds packages to your conda env
+vuv install                      # Same as poetry install - installs dependencies without creating new env
+vuv run python script.py        # Runs in your conda env
+```
+
+**The key difference**: `uv` would create its own virtual environment, but `vuv` uses your already-activated conda/virtualenv environment.
+
 ## Motivation
 
 `uv`, by defaults without [`UV_PROJECT_ENVIRONMENT` customization](https://docs.astral.sh/uv/configuration/environment/#uv_project_environment), **forcefully creates and activates its own virtual environment, even when you already have one activated.** This behavior can be inconvenient, *especially when working in a monorepo setup.*
