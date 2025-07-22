@@ -11,7 +11,7 @@ conda activate my-env                              # conda
 # uv venv my-env && . my-env/bin/activate          # uv venv
 
 vuv add requests pandas         # Uses YOUR environment (not a new one)
-vuv install                     # Install project without removing existing packages
+vuv install                     # As `poetry install`, install project without removing existing packages
 
 # All uv commands work
 vuv <any-uv-command> [arguments]
