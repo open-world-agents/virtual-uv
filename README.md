@@ -44,6 +44,9 @@ vuv add requests  # Just works, no setup needed
 
 **The key difference**: You shouldn't have to think about environment configuration at all.
 
+> **Why not per-project virtual environments? It's better practice.**  
+> Yes, it's controversial part, I know. But ML researchers commonly face the situation which installs tons of GB size packages (like PyTorch, TensorFlow, etc.) and it's not feasible to create a new environment for each project especially for brainstorming and prototyping. The fact that researchers does NOT commonly need strict dependency management is also a reason. (Most researchers get satisfied with single requirements.txt haha)
+
 ## How It Works
 
 1. Detects your active virtual environment (conda, virtualenv, etc.)
