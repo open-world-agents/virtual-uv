@@ -5,13 +5,18 @@ A wrapper script for [`uv`](https://github.com/astral-sh/uv) enabling automatic 
 ## Quick Demo
 
 ```sh
+
 # Activate your conda environment
 conda activate myproject
 
+pip install uv virtual-uv        # Install uv(if not installed) and virtual-uv
+
 # Now use vuv instead of uv - it respects your active environment!
-vuv add requests pandas numpy    # Adds packages to your conda env
+vuv add requests pandas numpy    # Adds packages to your conda environment
 vuv install                      # Same as poetry install - installs dependencies without creating new env
-vuv run python script.py        # Runs in your conda env
+vuv install --dev                # `vuv install something` is same as `uv sync --inexact --dev something`
+
+python script.py                 # Run anything within environment with packages managed by uv
 ```
 
 **The key difference**: `uv` would create its own virtual environment, but `vuv` uses your already-activated conda/virtualenv environment.
