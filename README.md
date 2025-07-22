@@ -21,6 +21,8 @@ VUV_ALLOW_BASE=1 vuv add package-name
 # Or use uv's system Python feature: UV_SYSTEM_PYTHON=1 vuv add package-name
 ```
 
+**Real-world example**: See virtual-uv in action in [this GitHub Actions workflow](https://github.com/open-world-agents/open-world-agents/blob/main/.github/workflows/ci.yml) using conda + vuv for CI/CD.
+
 ## Why You Need This
 
 `uv` has `UV_PROJECT_ENVIRONMENT` and `--active` but you have to configure them:
