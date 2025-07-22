@@ -1,124 +1,136 @@
 # virtual-uv
 
-A wrapper script for [`uv`](https://github.com/astral-sh/uv) enabling automatic virtual environment detection and configuration.
+A wrapper that makes [`uv`](https://github.com/astral-sh/uv) use your existing virtual environments instead of creating new ones. It automatically detects your active environment and makes `uv` use it.
 
-## Quick Demo
+## The Problem: `uv` Has the Features, But They're Inconvenient
+
+`uv` does support using existing environments with `UV_PROJECT_ENVIRONMENT` and `--active`, but requires manual setup every time:
 
 ```sh
-
-# Activate your conda environment
-conda activate myproject
-
-pip install uv virtual-uv        # Install uv(if not installed) and virtual-uv
-
-# Now use vuv instead of uv - it respects your active environment!
-vuv add requests pandas numpy    # Adds packages to your conda environment
-vuv install                      # Same as poetry install - installs dependencies without creating new env
-vuv install --dev                # `vuv install something` is same as `uv sync --inexact --dev something`
-
-python script.py                 # Run anything within environment with packages managed by uv
+# What uv expects you to do
+conda activate my-env
+UV_PROJECT_ENVIRONMENT=$CONDA_PREFIX uv add requests  # Manual env var
+# or
+uv add requests --active  # Remember the flag every time
 ```
 
-**The key difference**: `uv` would create its own virtual environment, but `vuv` uses your already-activated conda/virtualenv environment.
+This manual approach is inconvenient for two opposite types of users:
 
-## Motivation
+**Power Developers**: You want full control over environments but don't want to babysit `uv` with environment variables and flags every single command.
 
-`uv`, by defaults without [`UV_PROJECT_ENVIRONMENT` customization](https://docs.astral.sh/uv/configuration/environment/#uv_project_environment), **forcefully creates and activates its own virtual environment, even when you already have one activated.** This behavior can be inconvenient, *especially when working in a monorepo setup.*
+**ML Researchers**: You just want packages installed in your active environment without thinking about `uv`'s environment management at all. Of course `uv pip` is excellent interface replacing `pip` but it is not project managing feature modifying `pyproject.toml`.
 
-In monorepo development, `uv` only supports:
+## How Other Tools Handle This
 
-1. Using a single environment across all sub-repositories, or
-2. Using separate environments for each sub-repository.
+**Poetry does it right**: Poetry respects your active environment and doesn't forcefully manage environments. It also protects conda's base environment by default.
 
-However, these options lack flexibility. They do not allow you to *selectively install and manage dependencies across some sub-repositories with flexible interdependencies.*
+```sh
+conda activate my-env
+poetry add requests  # Just works, uses your environment
+```
 
-The existing virtual environment support in `uv` is limited and doesn't accommodate such scenarios. It provides only minimal customization through environment variables.
+**`uv` forces environment decisions**: Even when you have an environment activated, `uv` creates its own unless you manually configure it.
 
-To address these limitations, **`vuv`** was created. It allows `uv` to detect and use your currently activated virtual environment, providing the flexibility needed for complex project structures without forcing the creation of new environments.
+## The Solution: Clean Separation Like Poetry
 
-Related issues in `uv`: https://github.com/astral-sh/uv/issues/1703, https://github.com/astral-sh/uv/issues/11152, https://github.com/astral-sh/uv/issues/11315, https://github.com/astral-sh/uv/issues/11273, ...
-
-If equivalent feature is implemented in `uv`, this repo would be useless; I hope that time comes soon, since I'm waiting over 1 year.
-
-
-## Features
-
-- **Respects Existing Virtual Environments**: If a virtual environment is already activated (managed by `conda`, `virtualenv`, etc.), `vuv` ensures that `uv` uses it instead of creating a new one.
-
-- **Seamless Integration with `uv`**: Use `vuv` just like `uv`; all commands and arguments are passed directly to `uv`.
-
-- **`vuv install`**: `uv`, by defaults, forcefully sync whole project dependencies into python environment and it leads possible environment corruption when we use pre-existing environments. To support `install` instead of `sync` and to match `uv` behavior with `poetry`, we supports `vuv install` commands. It's implemented as simple; just it remaps `vuv install` into `uv sync --inexact`.
-
-## Installation
+`virtual-uv` solves this by separating `uv`'s "package management" from "virtual environment management" - giving you poetry's clean workflow with `uv`'s speed.
 
 ```sh
 pip install virtual-uv
+
+# Now it just works like poetry
+conda activate my-env    # You manage environments
+vuv add requests         # uv manages packages, automatically uses your env
+```
+
+**For Power Developers**: You get full environment control without babysitting `uv` with flags and environment variables.
+
+**For ML Researchers**: You get zero-config package management that respects your carefully crafted environments.
+
+Both get the same thing: clean separation of concerns.
+
+
+## Demo: The Difference
+
+### Before (Inconvenient)
+```sh
+# Power developer workflow - manual every time
+conda activate my-env
+UV_PROJECT_ENVIRONMENT=$CONDA_PREFIX uv add requests
+UV_PROJECT_ENVIRONMENT=$CONDA_PREFIX uv add pandas
+UV_PROJECT_ENVIRONMENT=$CONDA_PREFIX uv install
+
+# ML researcher workflow - unexpected behavior
+conda activate my-research-env  # 50GB with CUDA
+uv add transformers             # Creates NEW environment, ignores yours
+```
+
+### After (Clean)
+```sh
+# Both workflows become the same
+conda activate my-env           # You manage environment
+vuv add requests pandas         # uv manages packages in YOUR environment
+vuv install                     # Just works
+vuv run python script.py       # Runs in YOUR environment
+
+# Works with any environment manager
+python3 -m venv my-env && source my-env/bin/activate
+vuv add flask                   # Uses your venv
+
+poetry shell
+vuv add django                  # Uses poetry's environment
 ```
 
 ## Usage
 
-Use `vuv` as a drop-in replacement for `uv`.
-
-### Examples
-
 ```sh
-# Add a package to your project
+pip install virtual-uv
+
+# Use vuv exactly like uv, but it respects your environment
 vuv add package-name
-
-# Install dependencies (equivalent to 'uv sync --inexact')
 vuv install
+vuv run python script.py
+vuv <any-uv-command> [arguments]
 
-# Run other uv commands
-vuv <uv-command> [arguments]
-
-# For Docker containers or when you need to work with conda base environment
+# For Docker/CI (allow base environment modifications)
 VUV_ALLOW_BASE=1 vuv add package-name
 ```
 
-### Note
-
-- **Virtual Environment Required**: `vuv` requires an active virtual environment. If none is detected, to prevent unexpected behavior, it will prompt you to activate one. If you require system-wide install, use pure `uv` instead of `vuv`.
-- **`conda`'s `base` environment protection**: `vuv` will ask for user confirmation before modifying packages in the `base` environment in `conda`, as this is generally not recommended. You can bypass this prompt by setting the `VUV_ALLOW_BASE=1` environment variable (useful in Docker containers).
-
 ## How It Works
 
-When you run a command with `vuv`:
+1. Detects your active virtual environment (conda, virtualenv, etc.)
+2. Sets `UV_PROJECT_ENVIRONMENT` to point to your current environment
+3. Runs `uv` with the modified environment
 
-1. **Checks for an Active Virtual Environment**:
-   - For **conda**, it checks if `CONDA_DEFAULT_ENV` is set. If it's the `base` environment, it asks for user confirmation before proceeding.
-   - For **virtualenv**, it checks if `VIRTUAL_ENV` is set.
-2. **Sets Environment Variables**:
-   - Sets `UV_PROJECT_ENVIRONMENT` to point to your current virtual environment, so `uv` uses it instead of creating a new one.
-3. **Runs the `uv` Command**:
-   - Passes all arguments to `uv` with the modified environment variables.
+```python
+# Simplified implementation
+if "CONDA_DEFAULT_ENV" in os.environ:
+    env["UV_PROJECT_ENVIRONMENT"] = os.environ["CONDA_PREFIX"]
+elif "VIRTUAL_ENV" in os.environ:
+    env["UV_PROJECT_ENVIRONMENT"] = os.environ["VIRTUAL_ENV"]
 
-## Environment Variables
-
-- **`VUV_ALLOW_BASE`**: Set to `1`, `true`, or `yes` to allow modifications to conda's base environment without confirmation prompts. This is particularly useful in Docker containers where you need to work with the base environment.
-
-  ```sh
-  # Allow base environment modifications
-  export VUV_ALLOW_BASE=1
-  vuv add package-name
-
-  # Or set it for a single command
-  VUV_ALLOW_BASE=1 vuv add package-name
-  ```
+subprocess.run(["uv"] + args, env=env)
+```
 
 ## Requirements
 
-- **Python**: 3.7 or higher
-- **uv**: Ensure `uv` is installed and accessible from the command line.
-- **Virtual Environment**: An active virtual environment managed by `conda`, `virtualenv`, or similar tools.
+- Python 3.7+
+- `uv` installed
+- An active virtual environment
+
+## Related Issues
+
+This addresses long-standing `uv` issues:
+- [#1703](https://github.com/astral-sh/uv/issues/1703), [#11152](https://github.com/astral-sh/uv/issues/11152), [#11315](https://github.com/astral-sh/uv/issues/11315), [#11273](https://github.com/astral-sh/uv/issues/11273)
 
 ## Contributing
 
-Contributions are welcome! Feel free to submit issues or pull requests.
+Contributions welcome! Submit issues or pull requests.
 
 ## License
 
-This project is licensed under the MIT License.
+MIT License. See [LICENSE](LICENSE) for details.
 
 ## Author
 
-Developed by [MilkClouds](mailto:milkclouds00@gmail.com).
+Created by [MilkClouds](https://github.com/MilkClouds).
